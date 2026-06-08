@@ -23,6 +23,11 @@ echo '{"inputs":{"caseRecord":...}}' | appian pm run <uuid>
 
 # List nodes in a process model
 appian pm nodes list <uuid>
+
+# Discover node types and their input schemas
+appian pm node-types list
+appian pm node-types get "internal3.write_records_to_source_23r3"
+appian pm node-types get "internal.17" --form $INTERFACE_UUID
 ```
 
 Note: Creating a process model requires `--app $APP` (to associate with the application), `parentFolderUuid` (a PM folder, not a regular folder), and `errorAlertGroupName`. Discover the PM folder from `appian apps get $APP` (look at `defaultObjects.processModelFolderUuid`). Use the application's administrators group for `errorAlertGroupName`.
