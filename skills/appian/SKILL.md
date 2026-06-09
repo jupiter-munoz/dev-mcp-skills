@@ -43,9 +43,9 @@ Create and update commands accept JSON bodies. Two ways to provide them:
 echo '{"name":"MyRecord","sourceType":"DATABASE","fields":[...]}' | appian rt create --app $APP
 ```
 
-**Use --file for complex payloads:**
+**Use --file for complex payloads (write to /tmp, not the skill directory):**
 ```bash
-appian rt create --app $APP --file record-type.json
+appian rt create --app $APP --file /tmp/record-type.json
 ```
 
 **Pipe get → modify → update (idiomatic pattern):**
