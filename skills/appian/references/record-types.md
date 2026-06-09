@@ -41,23 +41,23 @@ appian rt filters list <uuid>
 
 ```json
 {
-  "name": "Case",
+  "name": "CM Case",
   "pluralName": "Cases",
   "sourceType": "DATABASE",
   "createTable": true,
   "description": "Support cases submitted by customers",
   "fields": [
-    {"fieldName": "case_id", "fieldType": "INTEGER", "isPrimaryKey": true},
+    {"fieldName": "caseId", "fieldType": "INTEGER", "isPrimaryKey": true},
     {"fieldName": "title", "fieldType": "TEXT", "length": 255},
     {"fieldName": "description", "fieldType": "TEXT", "length": 4000},
     {"fieldName": "status", "fieldType": "TEXT", "length": 50},
     {"fieldName": "priority", "fieldType": "INTEGER"},
-    {"fieldName": "assigned_username", "fieldType": "USER"},
-    {"fieldName": "customer_id", "fieldType": "INTEGER"},
-    {"fieldName": "created_by_username", "fieldType": "USER"},
-    {"fieldName": "modified_by_username", "fieldType": "USER"},
-    {"fieldName": "created_at", "fieldType": "DATETIME"},
-    {"fieldName": "updated_at", "fieldType": "DATETIME"}
+    {"fieldName": "assignedUsername", "fieldType": "USER"},
+    {"fieldName": "customerId", "fieldType": "INTEGER"},
+    {"fieldName": "createdByUsername", "fieldType": "USER"},
+    {"fieldName": "modifiedByUsername", "fieldType": "USER"},
+    {"fieldName": "createdAt", "fieldType": "DATETIME"},
+    {"fieldName": "updatedAt", "fieldType": "DATETIME"}
   ]
 }
 ```
@@ -72,7 +72,7 @@ appian rt filters list <uuid>
 ## Field Configuration
 
 Each field requires:
-- `fieldName` — snake_case column name (Appian auto-converts to camelCase for the record field)
+- `fieldName` — camelCase identifier used in SAIL expressions (e.g., `firstName`, `caseId`). The platform auto-generates the database column name in UPPER_SNAKE_CASE.
 - `fieldType` — one of: TEXT, NUMBER, INTEGER, DECIMAL, DATE, DATETIME, TIME, BOOLEAN, USER, GROUP, DOCUMENT, FOLDER
 
 Optional:
@@ -88,9 +88,9 @@ Load `references/field-types.md` for the complete field type reference.
 - **Record type name**: `PREFIX EntityName` in Title Case, singular — `CM Case`, `CM Customer`, `CM Letter of Authorization`
 - **Plural name**: Title Case, plural, no prefix — `Cases`, `Customers`, `Letters of Authorization`
 - **Table name**: UPPER_SNAKE_CASE, singular — `CASE`, `CUSTOMER`, `LETTER_OF_AUTHORIZATION`
-- **Field names**: snake_case — `case_id`, `created_at`, `assigned_username`
-- **Primary key**: `[table_name_lowercase]_id` — table CASE → `case_id`
-- **Foreign keys**: `[referenced_table_lowercase]_id` — referencing CUSTOMER → `customer_id`
+- **Field names**: camelCase — `caseId`, `createdAt`, `assignedUsername` (DB column auto-generated as UPPER_SNAKE_CASE)
+- **Primary key**: `[entityName]Id` in camelCase — `caseId`, `employeeId`
+- **Foreign keys**: `[referencedEntity]Id` in camelCase — `customerId`, `caseStatusId`
 
 ## Standard Field Structure
 
@@ -100,10 +100,10 @@ Order: primary key → business fields → foreign keys → audit fields.
 2. Business fields from requirements
 3. Foreign key fields (INTEGER)
 4. Audit fields (entities only, not reference/junction tables):
-   - `created_by_username` (USER)
-   - `modified_by_username` (USER)
-   - `created_at` (DATETIME)
-   - `updated_at` (DATETIME)
+   - `createdByUsername` (USER)
+   - `modifiedByUsername` (USER)
+   - `createdAt` (DATETIME)
+   - `updatedAt` (DATETIME)
 
 ## Relationships
 
@@ -130,7 +130,7 @@ A one-sided relationship breaks record type traversal.
 
 ### Relationship Naming
 
-- **MANY_TO_ONE**: remove `_id` from FK field, camelCase — `customer_id` → `customer`
+- **MANY_TO_ONE**: remove `Id` suffix, keep camelCase — `customerId` → `customer`, `caseStatusId` → `caseStatus`
 - **ONE_TO_MANY to entities**: pluralize target in camelCase — `CASE_NOTE` → `caseNotes`
 - **ONE_TO_MANY to junction**: pluralize the other entity — CASE→CASE_TAG→TAG: name is `tags`
 - **ONE_TO_ONE**: same as MANY_TO_ONE on FK side; entity name on other side
