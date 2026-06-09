@@ -53,6 +53,31 @@ appian rt create --app $APP --file record-type.json
 appian rt get $UUID | jq '.description = "Updated description"' | appian rt update $UUID
 ```
 
+**Use heredoc for SAIL expressions (avoids quote/brace escaping hell):**
+```bash
+cat << 'EOF' | appian interfaces create --app $APP
+{
+  "name": "MY_EmployeesPage",
+  "expression": "=a!gridField(label: \"Employees\", data: recordType!{uuid}Employee, columns: {a!gridColumn(label: \"Name\", value: fv!row['recordType!{uuid}Employee.fields.{fid}firstName'])})"
+}
+EOF
+```
+
+```bash
+cat << 'EOF' | appian pm create --app $APP
+{
+  "name": "MY Create Case",
+  "processVariables": [{"name": "record", "type": "{urn:com:appian:recordtype:datatype}abc-123", "isParameter": true}],
+  "startForm": {"interfaceUuid": "uuid-here", "inputMap": {"record": "record"}},
+  "nodes": [
+    {"id": 1, "type": "core.0", "name": "Start", "coordinates": [50, 200], "connections": [2]},
+    {"id": 2, "type": "internal3.write_records_to_source_23r3", "name": "Write", "coordinates": [250, 200], "connections": [3]},
+    {"id": 3, "type": "core.1", "name": "End", "coordinates": [450, 200], "connections": []}
+  ]
+}
+EOF
+```
+
 ### Output
 
 All commands return JSON by default. Use `--format uuids` when you only need the UUID of a created object. Use `jq` to extract specific fields:
@@ -163,5 +188,5 @@ appian sites create --app $APP --file case-site.json
 - Use `--format uuids` when piping creation output into subsequent commands
 - Store UUIDs in variables for multi-step workflows
 - Record type relationships require both sides declared (MANY_TO_ONE + ONE_TO_MANY)
-- SAIL expressions in JSON must escape quotes: `"expression": "=a!textField(label: \"Name\")"`
+- SAIL expressions in JSON: use heredoc (`cat << 'EOF'`) to avoid quote escaping issues
 - All `recordType!` references in expressions must use UUID-qualified format: `'recordType!{uuid}Name.fields.{fieldUuid}fieldName'`
