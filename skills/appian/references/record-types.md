@@ -302,6 +302,7 @@ echo '{
 - Always set `contextExpr` on RELATED_ACTION to pass the record into the process model
 - Use heredoc (`cat << 'EOF'`) for complex visibility expressions to avoid shell escaping issues
 - The `key` must be unique within the record type and is used in SAIL references
+- RELATED_ACTIONs auto-surface only on record views, NOT on custom `a!gridField` grids. When adding a RELATED_ACTION (e.g., Edit), also update any dashboard interface that displays that record type in a custom grid — add `recordActions` to the grid or a link column using `a!recordActionField()` to surface the action on each row.
 
 ## User Filters
 
