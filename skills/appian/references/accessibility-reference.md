@@ -258,7 +258,7 @@ These cannot be checked programmatically from SAIL source but are part of the fu
 
 ## Component-to-Rule Quick Lookup
 
-For a compact mapping of which rules apply to which SAIL components, see: `references/component-checks.md`
+For a compact mapping of which rules apply to which SAIL components, see: `component-checks.md`
 
 ---
 
