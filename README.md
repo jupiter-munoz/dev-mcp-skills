@@ -11,23 +11,15 @@ Skills are markdown files that provide domain-specific knowledge to AI assistant
 ```
 skills/
   appian/
-    SKILL.md                         ← Entry point (description, reference map, dependency order)
+    SKILL.md                  ← Entry point (description, reference map, dependency order)
     references/
-      tools-mcp.md                   ← MCP tool patterns and non-obvious behaviors
-      function-reference.md          ← Function catalog with anti-hallucination list
-      component-reference.md         ← SAIL component catalog (~53 components with signatures)
-      component-loading-index.md     ← Quick reference for 21 instruction files
-      documentation-lookup-strategy.md ← Three-tier lookup workflows
-      record-types.md                ← Record type schemas, fields, relationships, actions
-      data-modeling.md               ← Entity design, normalization, naming conventions
-      interfaces.md                  ← SAIL forms, dashboards, summary views
-      process-models.md              ← Nodes, variables, start forms, flow patterns
-      sail.md                        ← Components, layouts, data binding, grids
-      components/                    ← Component instruction files (21 files)
-      layouts/                       ← Layout instruction files (9 files)
-      ...                            ← Additional reference files
-    registry/
-      components-registry.json       ← Comprehensive component list (146 components)
+      tools-mcp.md            ← MCP tool patterns and non-obvious behaviors
+      record-types.md         ← Record type schemas, fields, relationships, actions
+      data-modeling.md        ← Entity design, normalization, naming conventions
+      interfaces.md           ← SAIL forms, dashboards, summary views
+      process-models.md       ← Nodes, variables, start forms, flow patterns
+      sail.md                 ← Components, layouts, data binding, grids
+      ...                     ← Additional reference files
 ```
 
 The skill has a single entry point (`SKILL.md`) with a resource reference map that tells the assistant which reference file to load for any given task. Reference files contain domain knowledge — schemas, conventions, patterns, and pitfalls — without tool-specific syntax.
@@ -118,16 +110,13 @@ The skill uses a three-tier strategy to enrich its knowledge when skill referenc
 
 **Tier 1: Skill References** (always check first)
 - 58 curated functions with patterns and anti-patterns
-- 146 SAIL components with existence verification and critical warnings
-- 21 component instruction files with detailed guidance
 - Detailed examples for complex scenarios
 - May exceed official docs in depth
 
-**Tier 2: Official JSON APIs** (definitive existence checks)
-- **Tier 2A:** functions.json for function lookups (495 total functions)
-- **Tier 2B:** Components registry + functions.json for component lookups (146 components)
+**Tier 2: functions.json + curl** (function lookups)
+- Definitive function existence checks
+- Official signatures for 495 total functions
 - Version-specific, deterministic lookups
-- Fast, exact matches
 
 **Tier 3: Documentation Search Tool** (patterns & recipes - requires optional MCP server)
 - 200+ official recipes (query, function, interface)
@@ -163,36 +152,11 @@ AI: [Checks function-reference.md anti-hallucination list]
 Result: Definitive "No" with correct alternatives, prevents false positive
 ```
 
-#### Example: Component Verification with Tier 2B
-```
-You: "Create an interface with a rich text editor for formatted input"
-
-AI: [Loads component-reference.md - checks anti-hallucination list]
-    [Finds: a!richTextEditor doesn't exist]
-    [Registry suggests alternatives:]
-    - a!paragraphField (multi-line text input, no formatting)
-    - a!styledTextEditorField (rich text editing with toolbar)
-    - a!richTextDisplayField (display formatted text, read-only)
-    [Checks registry: a!styledTextEditorField exists, no instruction file]
-    [Uses Tier 2B: fetches signature from functions.json]
-    [Creates interface with a!styledTextEditorField]
-
-Result: Correct component used, non-existent component avoided
-```
-
 **How it works:**
 1. **Tier 1 first:** Check skill references (curated, instant)
-2. **Tier 2A for functions:** Existence checks and signatures (fast, exact)
-3. **Tier 2B for components:** Registry + functions.json (existence + warnings)
-4. **Tier 3 for patterns:** Recipes and best practices (semantic search)
-5. **Combine sources:** Skill references + official docs = enriched knowledge
-
-**Component verification benefits:**
-- ✅ 146 components verified via registry
-- ✅ Catches non-existent components early (a!richTextEditor doesn't exist)
-- ✅ Surfaces critical warnings (showSearchBox only works with recordType! data)
-- ✅ Maps 21 instruction files automatically
-- ✅ Fallback to official docs for components without instruction files
+2. **Tier 2 for functions:** Existence checks and signatures (fast, exact)
+3. **Tier 3 for patterns:** Recipes and best practices (semantic search)
+4. **Combine sources:** Skill references + official docs = enriched knowledge
 
 See [Documentation Lookup Strategy](skills/appian/references/documentation-lookup-strategy.md) for complete workflows, curl commands, error handling, and examples.
 
@@ -203,22 +167,9 @@ The AI loads the skill on demand based on the task — you don't need to referen
 - Applications, record types, fields, relationships
 - Interfaces (forms, dashboards, summary views)
 - Expression rules and SAIL expressions
-- **SAIL component verification** (existence checks, instruction files, critical warnings)
-- **Function verification** (anti-hallucination, signature lookups, documentation search)
 - Process models (nodes, variables, start forms)
 - Sites, Web APIs, constants, groups, folders, documents
 - Data modeling, security, change planning, change review
-
-### Component Verification
-
-Before building interfaces, the skill verifies all SAIL components through:
-
-1. **Registry check** - Confirms component existence (146 components)
-2. **Instruction file loading** - Loads detailed guidance for 21 components
-3. **Critical warnings** - Surfaces gotchas (e.g., showSearchBox only works with recordType! data)
-4. **Tier 2B fallback** - Fetches official docs for components without instruction files
-
-This prevents using non-existent components (like `a!richTextEditor`) and missing critical parameter restrictions.
 
 ## Maintenance
 
