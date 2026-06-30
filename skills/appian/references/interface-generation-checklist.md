@@ -202,7 +202,69 @@
   - Create rule after interface if needed
   - Document in comments for now
 
-### 10. Common Anti-Patterns Avoided
+### 10. Form Submission Validation (if form has Save button)
+
+- [ ] **Save button has saveInto logic:**
+  - Check if Update/Modify process model exists for this record type
+  - If YES → use `a!startProcess()` with process model constant
+  - If NO → use `a!writeRecords()` with record constructor
+  - NEVER use `submit: true` without `saveInto` (does nothing)
+
+- [ ] **Record constructor correct (for a!writeRecords):**
+  - Updating existing record? → Include primary key field (`id`)
+  - Creating new record? → Omit primary key field (auto-generated)
+  - Use full field references: `'recordType!Name.fields.fieldName'`
+  - Use generic record type names (no UUIDs in SAIL code)
+
+- [ ] **Process parameters correct (for a!startProcess):**
+  - Process model referenced via constant (e.g., `cons!UPDATE_ORDER_PROCESS`)
+  - Parameter names match process model variable names
+  - All required parameters passed (typically: record ID + fields to update)
+
+- [ ] **Success/error handling included:**
+  - `local!saveSuccess` variable exists (tracks successful save)
+  - `local!saveError` variable exists (tracks error message)
+  - `onSuccess` handler updates `local!saveSuccess` to `true`
+  - `onError` handler captures `fv!error` into `local!saveError`
+
+- [ ] **User feedback displayed:**
+  - Success banner shown when `local!saveSuccess = true`
+  - Error banner shown when `local!saveError` is not null
+  - Messages are clear and actionable
+
+- [ ] **Button configuration correct:**
+  - `submit: true` - Triggers form submission
+  - `validate: true` - Runs validations before save
+  - `style: "SOLID"` - Primary action styling
+
+### 11. Platform Feature Duplication Avoided
+
+**Before generating SAIL code, verify NO platform feature duplication:**
+
+- [ ] **No user identification UI:**
+  - Do NOT create sections/fields for username, full name, profile photo, or role display
+  - Appian header provides user identification automatically
+  - If requirements mention "show logged-in user": Explain this is provided by the platform
+
+- [ ] **No language selection UI:**
+  - Do NOT create sections/fields for language/locale switching
+  - Appian user preferences provide this automatically
+  - If requirements mention "language selector": Explain this is in user profile settings
+
+- [ ] **No site-level navigation chrome:**
+  - Do NOT create application header, site menus, page-to-page breadcrumbs, or "Back to Dashboard" links
+  - Platform chrome provides site navigation automatically
+  - **ALLOWED:** Within-interface navigation (tabs, wizard steps, accordions, section collapsing)
+  - **ALLOWED:** Process routing (e.g., "Cancel returns to dashboard" is process model routing, not navigation chrome)
+  - If requirements mention "site menu" or "app header": Explain this is provided by the platform
+
+**Why this matters:** Appian provides these features natively. Creating custom UI for them:
+- Duplicates platform functionality
+- Creates maintenance burden
+- May conflict with platform upgrades
+- Wastes development time
+
+### 12. Common Anti-Patterns Avoided
 
 - [ ] **NOT using these non-existent functions:**
   - `regexmatch()` - use `like()` or `search()`
@@ -273,7 +335,7 @@ What are you building?
 **After completing checklist, confirm:**
 
 ```
-✅ All reference files loaded (Steps 1-4)
+✅ All reference files loaded (Steps 1-5)
 ✅ Data source clarity confirmed (mockup vs record)
 ✅ Chart patterns verified (correct approach chosen)
 ✅ Layout hierarchy valid (no orphans, correct widths)
@@ -281,6 +343,8 @@ What are you building?
 ✅ Null safety applied throughout
 ✅ Function variables used correctly (fv!item, local!)
 ✅ Query structure valid (if using record data)
+✅ Form submission valid (if Save button exists)
+✅ Platform features not duplicated (no user ID, language, site nav)
 ✅ Anti-patterns avoided (checked non-existent list)
 
 Ready to call MCP tools: YES / NO

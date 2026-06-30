@@ -71,6 +71,7 @@ Load the relevant reference(s) for your task:
 |---|---|
 | You need usage patterns for the Appian MCP tools | `references/tools-mcp.md` |
 | Understanding when to ask user for confirmation vs auto-complete mandatory steps | `references/confirmation-patterns.md` |
+| Validating SAIL expressions before creating interfaces or expression rules (Step 7B - MANDATORY for all interface/rule creation) | `references/validation-checkpoint.md` |
 | Writing any expression or expression rule (ALWAYS load core pattern files) | `references/function-reference.md`, `references/null-safety-patterns.md`, `references/short-circuit-patterns.md` |
 | Using Appian functions, operators, or type conversions in expressions | `references/function-reference.md`, `references/null-safety-patterns.md` |
 | Need detailed array, date/time, match, or forEach patterns | `references/function-patterns-index.md` (loads pattern files on demand) |
@@ -81,6 +82,8 @@ Load the relevant reference(s) for your task:
 | Creating or managing an application | `references/applications.md` |
 | Creating/modifying record types, fields, relationships, views, or actions | `references/record-types.md` |
 | Requirements mention filtering, searching, faceted navigation, or record list dropdowns | `references/record-type-user-filters.md` |
+| Understanding interface types, workflows (Dashboard → Summary View → Form), and when to use each type (MANDATORY before creating any interface) | `references/appian-workflow-patterns.md` |
+| Creating record summary views (read-only detail pages for primary entities showing related records) | `references/record-summary-views.md` |
 | Creating/modifying interfaces or writing SAIL form expressions | `references/interfaces.md` |
 | Creating/modifying expression rules (architectural guidance) | `references/expression-rules.md` |
 | Gathering expression rule requirements (clarifying inputs, outputs, validation depth, query scope before implementation) | `references/expressions.md` |
@@ -91,6 +94,7 @@ Load the relevant reference(s) for your task:
 | Creating constants, groups, folders, or documents | `references/supporting-objects.md` |
 | Designing a data model, choosing entity structure, or normalizing fields into lookup tables | `references/data-modeling.md` |
 | Writing SAIL expressions for interfaces (layout, components, patterns) | `references/sail.md` |
+| Building editable forms with Save buttons (inline writes vs process-based updates) | `references/write-records-patterns.md` |
 | Configuring security roles, record-level security, or group hierarchy | `references/security.md` |
 | Configuring security expressions, group hierarchies, or role-based access patterns | `references/security-patterns.md` |
 | Starting a multi-object task — need to plan dependency order and scope | `references/change-planning.md` |
@@ -144,7 +148,9 @@ Use the Resource Reference Map above to identify which reference file matches yo
 **Common scenarios:**
 - Creating record types → Load `references/record-types.md` AND `references/data-modeling.md`
 - Adding relationships → Load `references/relationship-patterns.md`
-- Building interfaces → Load `references/interfaces.md` AND `references/sail.md`
+- **Building any interface** → Load `references/appian-workflow-patterns.md` (MANDATORY - provides interface type decision criteria) AND `references/interfaces.md` AND `references/sail.md`
+- Building interfaces (editable with Save button / Forms) → Load `references/appian-workflow-patterns.md` AND `references/interfaces.md` AND `references/sail.md` AND `references/write-records-patterns.md`
+- Building interfaces (read-only / Summary Views) → Load `references/appian-workflow-patterns.md` AND `references/interfaces.md` AND `references/sail.md`
 - Creating process models → Load `references/process-models.md` AND `references/node-types.md`
 
 ---
@@ -325,11 +331,11 @@ Based on what you discover in Steps 2-4, load additional references:
 - **Domain knowledge ready:** Naming conventions, dependency order, mandatory relationships
 - **UUIDs available:** From environment (via list/get operations), not fabricated
 
-#### Step 7: Only Now Call MCP Tools
+#### Step 7: Generate, Validate, and Create Objects
 
-After completing Steps 1-6 verification, you have complete implementation knowledge. Write expression rule body or interface SAIL code using MCP tools.
+After completing Steps 1-6 verification, you have complete implementation knowledge. Now follow this three-phase workflow:
 
-**Final checklist:**
+**Final pre-generation checklist:**
 - [ ] Loaded all 7 required files from Step 1? (tools-mcp, confirmation-patterns, function-reference, component-reference, null-safety-patterns, short-circuit-patterns, sail-verification-checkpoint)
 - [ ] Passed Step 4 checkpoint? (completed sail-verification-checkpoint.md exit checklist)
   - [ ] Expression rules: Step 4A completed (all functions verified)
@@ -341,6 +347,100 @@ After completing Steps 1-6 verification, you have complete implementation knowle
 - [ ] Have actual UUIDs from environment (not fabricated)?
 - [ ] Know which relationships are mandatory (e.g., USER fields → SYSTEM_RECORD_TYPE_USER)?
 - [ ] Completed Step 6 pre-implementation verification?
+
+---
+
+##### Step 7A: Generate SAIL Expression
+
+**For Expression Rules:**
+- Generate the expression body as a string
+- Ensure all `ri!` references match input parameter names
+- Apply null safety patterns from null-safety-patterns.md
+- Use only verified functions (Step 4A complete)
+
+**For Interfaces:**
+- Generate the full interface expression as a string
+- Ensure all `ri!` references match input parameter names
+- Apply null safety patterns from null-safety-patterns.md
+- Use only verified functions AND components (Step 4A + 4B complete)
+- Follow interface-generation-checklist.md validation items
+
+---
+
+##### Step 7B: Validate Expression (Retry Loop)
+
+**🛑 MANDATORY: Load validation checkpoint document**
+
+```
+Load: references/validation-checkpoint.md
+```
+
+**Validation workflow:**
+
+1. **Call `validateExpression` MCP tool** with generated SAIL
+2. **If validation passes** (`hasErrors: false`) → Proceed to Step 7C
+3. **If validation fails** (`hasErrors: true`) → Enter retry loop:
+
+**Retry Loop (MAX_ATTEMPTS = 3):**
+
+```
+Attempt 1: Validate generated SAIL
+  ❌ If fails → Extract error details, fix SAIL
+
+Attempt 2: Re-validate fixed SAIL
+  ❌ If fails → Extract error details, fix again
+
+Attempt 3: Final validation
+  ❌ If fails → Report to user with full error details
+  ✅ If passes → Proceed to Step 7C
+```
+
+**Error Fix Strategy:**
+
+- **Parse errors** (syntax) → Check delimiters, function names (anti-hallucination list)
+- **Discovery errors** (references) → Verify `ri!`, `recordType!`, `local!` names
+- **Eval errors** (types) → Apply explicit casting, fix null handling
+
+**After 3 failed attempts:**
+- Report validation errors to user
+- Include error messages from `parseErrors`, `discoveryErrors`, `evalErrors`
+- Request user guidance or manual review
+
+**Validation checkpoint document provides:**
+- ✅ Complete retry loop pattern (with pseudo-code)
+- ✅ Error fix strategies by error type
+- ✅ Real examples (expression rule + interface with retry)
+- ✅ Common validation errors and fixes table
+
+---
+
+##### Step 7C: Create Object (Only After Validation Passes)
+
+✅ **Validation passed** → Now safe to call MCP tools:
+
+**For Expression Rules:**
+```
+Call: createExpressionRule
+Parameters: {
+  name: "...",
+  expression: "<validated SAIL>",
+  inputs: [...],
+  ...
+}
+```
+
+**For Interfaces:**
+```
+Call: createInterface
+Parameters: {
+  name: "...",
+  expression: "<validated SAIL>",
+  inputs: [...],
+  ...
+}
+```
+
+**IMPORTANT:** Do NOT call `createExpressionRule` or `createInterface` until Step 7B validation passes.
 
 ---
 
